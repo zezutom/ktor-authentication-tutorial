@@ -1,4 +1,4 @@
-package com.tomaszezula.ktorauth.ch02.ch01
+package com.tomaszezula.ktorauth.ch01
 
 import com.tomaszezula.ktorauth.ch01.plugins.configureRouting
 import io.ktor.client.request.*

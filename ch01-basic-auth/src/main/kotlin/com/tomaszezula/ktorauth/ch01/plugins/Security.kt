@@ -1,4 +1,4 @@
-package com.tomaszezula.ktorauth.ch02.ch01.plugins
+package com.tomaszezula.ktorauth.ch01.plugins
 
 import io.ktor.server.application.*
 
