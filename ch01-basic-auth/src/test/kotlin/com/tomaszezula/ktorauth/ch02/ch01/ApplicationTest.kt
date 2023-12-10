@@ -1,0 +1,21 @@
+package com.tomaszezula.ktorauth.ch02.ch01
+
+import com.tomaszezula.ktorauth.ch01.plugins.configureRouting
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.server.testing.*
+import kotlin.test.*
+
+class ApplicationTest {
+    @Test
+    fun testRoot() = testApplication {
+        application {
+            configureRouting()
+        }
+        client.get("/").apply {
+            assertEquals(HttpStatusCode.OK, status)
+            assertEquals("Hello World!", bodyAsText())
+        }
+    }
+}
