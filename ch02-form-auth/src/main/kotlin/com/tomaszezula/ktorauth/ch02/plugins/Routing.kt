@@ -5,15 +5,18 @@ import io.ktor.server.auth.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
 import kotlinx.html.*
 
 fun Application.configureRouting() {
     routing {
-        authenticate("auth-form") {
+        authenticate("auth-session", "auth-form") {
             get("/") {
-                call.respondText("Hello, ${call.principal<UserIdPrincipal>()?.name}!")
+                call.respondText("Hello, ${call.principal<UserSession>()?.name}!")
             }
             post("/login") {
+                val username = call.principal<UserIdPrincipal>()?.name
+                username?.let { call.sessions.set(UserSession(it)) }
                 call.respondText("Hello, ${call.principal<UserIdPrincipal>()?.name}!")
             }
         }

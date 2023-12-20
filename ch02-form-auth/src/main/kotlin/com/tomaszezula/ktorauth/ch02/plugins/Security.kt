@@ -3,6 +3,7 @@ package com.tomaszezula.ktorauth.ch02.plugins
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
+import io.ktor.server.sessions.*
 
 fun Application.configureSecurity() {
     // The relevant part of application configuration is the following:
@@ -29,8 +30,28 @@ fun Application.configureSecurity() {
                 call.respondRedirect("/login")
             }
         }
+        session<UserSession>("auth-session") {
+            validate { session ->
+                if (session.name in users) {
+                    session
+                } else {
+                    null
+                }
+            }
+            challenge {
+                call.respondRedirect("/login")
+            }
+        }
+    }
+    install(Sessions) {
+        cookie<UserSession>("user_session") {
+            cookie.path = "/"
+            cookie.maxAgeInSeconds = 60
+        }
     }
 }
+
+data class UserSession(val name: String) : Principal
 
 fun Application.loadUsers(filePath: String): Map<String, String> {
     val userFile = this.javaClass.classLoader.getResource(filePath)
@@ -42,4 +63,5 @@ fun Application.loadUsers(filePath: String): Map<String, String> {
         name to password
     }
 }
+
 

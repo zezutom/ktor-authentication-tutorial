@@ -9,4 +9,5 @@ val ktor_version: String by project
 
 dependencies {
     implementation("io.ktor:ktor-server-html-builder:$ktor_version")
+    implementation("io.ktor:ktor-server-sessions:$ktor_version")
 }
