@@ -20,6 +20,10 @@ fun Application.configureRouting() {
                 call.respondText("Hello, ${call.principal<UserIdPrincipal>()?.name}!")
             }
         }
+        get("/logout") {
+            call.sessions.clear<UserSession>()
+            call.respondRedirect("/login")
+        }
         get("/login") {
             call.respondHtml {
                 body {

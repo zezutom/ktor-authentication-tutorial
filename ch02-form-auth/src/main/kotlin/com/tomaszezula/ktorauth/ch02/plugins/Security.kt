@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
+import io.ktor.util.*
 
 fun Application.configureSecurity() {
     // The relevant part of application configuration is the following:
@@ -43,16 +44,35 @@ fun Application.configureSecurity() {
             }
         }
     }
+    installSessionStorage()
+
+    // Enable if you want to pass session data directly to the browser
+//    installEncryptedSessions()
+}
+
+data class UserSession(val name: String) : Principal
+
+fun Application.installSessionStorage() {
     install(Sessions) {
-        cookie<UserSession>("user_session") {
+        cookie<UserSession>("user_session", SessionStorageMemory()) {
             cookie.path = "/"
             cookie.maxAgeInSeconds = 60
         }
     }
 }
 
-data class UserSession(val name: String) : Principal
-
+fun Application.installEncryptedSessions() {
+    val encryptionConfig = environment.config.config("ktor.auth.encryption")
+    install(Sessions) {
+        val encryptKey = hex(encryptionConfig.property("encrypt-key").getString())
+        val signKey = hex(encryptionConfig.property("sign-key").getString())
+        cookie<UserSession>("user_session") {
+            cookie.path = "/"
+            cookie.maxAgeInSeconds = 60
+            transform(SessionTransportTransformerEncrypt(encryptKey, signKey))
+        }
+    }
+}
 fun Application.loadUsers(filePath: String): Map<String, String> {
     val userFile = this.javaClass.classLoader.getResource(filePath)
         ?: throw IllegalArgumentException("Could not read users file: $filePath")
