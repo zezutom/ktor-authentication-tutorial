@@ -7,6 +7,7 @@ import com.tomaszezula.ktorauth.ch03.plugins.loadUsers
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
+import java.time.Clock
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
@@ -17,6 +18,7 @@ fun Application.module() {
         json()
     }
     val jwtConfig = environment.config.config("ktor.auth.jwt").jwtConfig()
+    val clock = Clock.systemUTC()
     configureSecurity(jwtConfig)
-    configureRouting(jwtConfig, loadUsers("users.properties"))
+    configureRouting(jwtConfig, loadUsers("users.properties"), clock)
 }

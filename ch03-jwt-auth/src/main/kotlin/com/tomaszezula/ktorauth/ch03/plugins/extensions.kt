@@ -9,7 +9,7 @@ fun ApplicationConfig.jwtConfig(): JWTConfig {
         secret = property("secret").getString(),
         audience = property("audience").getString(),
         issuer = property("issuer").getString(),
-        expirationSeconds = property("expirationSeconds").getString().toInt()
+        expirationSeconds = property("expirationSeconds").getString().toLong()
     )
 }
 
@@ -29,5 +29,5 @@ data class JWTConfig(
     val secret: String,
     val audience: String,
     val issuer: String,
-    val expirationSeconds: Int
+    val expirationSeconds: Long
 )

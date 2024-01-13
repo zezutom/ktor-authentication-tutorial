@@ -8,9 +8,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import java.time.Instant
+import java.time.Clock
 
-fun Application.configureRouting(jwtConfig: JWTConfig, userRepository: Map<String, String>) {
+fun Application.configureRouting(jwtConfig: JWTConfig, userRepository: Map<String, String>, clock: Clock) {
     routing {
         post("/login") {
             val login = call.receive<Login>()
@@ -20,7 +20,7 @@ fun Application.configureRouting(jwtConfig: JWTConfig, userRepository: Map<Strin
                         .withAudience(jwtConfig.audience)
                         .withIssuer(jwtConfig.issuer)
                         .withClaim("name", login.username)
-                        .withExpiresAt(Instant.now().plusSeconds(600))
+                        .withExpiresAt(clock.instant().plusSeconds(jwtConfig.expirationSeconds))
                         .sign(HMAC256(jwtConfig.secret))
                     call.respond(mapOf("token" to token))
                 } else {
