@@ -7,22 +7,21 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.Serializable
+import java.time.Instant
 
-fun Application.configureRouting() {
-    val userRepository = loadUsers("users.properties")
+fun Application.configureRouting(jwtConfig: JWTConfig, userRepository: Map<String, String>) {
     routing {
         post("/login") {
-            val params = call.receiveParameters()
-            val username = params["username"]
-            val password = params["password"]
-            userRepository[username]?.let {
-                if (it == password) {
-                    // TODO pass params in config
+            val login = call.receive<Login>()
+            userRepository[login.username]?.let {
+                if (it == login.password) {
                     val token = JWT.create()
-                        .withAudience("ktor-audience")
-                        .withIssuer("ktor-issuer")
-                        .withClaim("name", username)
-                        .sign(HMAC256("ktor-secret"))
+                        .withAudience(jwtConfig.audience)
+                        .withIssuer(jwtConfig.issuer)
+                        .withClaim("name", login.username)
+                        .withExpiresAt(Instant.now().plusSeconds(600))
+                        .sign(HMAC256(jwtConfig.secret))
                     call.respond(mapOf("token" to token))
                 } else {
                     call.loginFailed()
@@ -36,16 +35,9 @@ fun Application.configureRouting() {
     }
 }
 
+@Serializable
+data class Login(val username: String, val password: String)
+
 suspend fun ApplicationCall.loginFailed() {
     respond(HttpStatusCode.Forbidden, "Login failed")
-}
-fun Application.loadUsers(filePath: String): Map<String, String> {
-    val userFile = this.javaClass.classLoader.getResource(filePath)
-        ?: throw IllegalArgumentException("Could not read users file: $filePath")
-    val delimiter = "="
-    userFile.readText().lines()
-    return userFile.readText().lines().filter { it.contains(delimiter) }.associate {
-        val (name, password) = it.split(delimiter)
-        name to password
-    }
 }

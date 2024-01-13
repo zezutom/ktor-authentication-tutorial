@@ -6,27 +6,19 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 
-fun Application.configureSecurity() {
-    // The relevant part of application configuration is the following:
-    val authConfig = environment.config.config("ktor.auth.jwt")
-
-    val jwtRealm = authConfig.property("realm").getString()
-    val jwtSecret = authConfig.property("secret").getString()
-    val jwtAudience = authConfig.property("audience").getString()
-    val jwtDomain = authConfig.property("domain").getString()
-
+fun Application.configureSecurity(jwtConfig: JWTConfig) {
     authentication {
         jwt {
-            realm = jwtRealm
+            realm = jwtConfig.realm
             verifier(
                 JWT
-                    .require(Algorithm.HMAC256(jwtSecret))
-                    .withAudience(jwtAudience)
-                    .withIssuer(jwtDomain)
+                    .require(Algorithm.HMAC256(jwtConfig.secret))
+                    .withAudience(jwtConfig.audience)
+                    .withIssuer(jwtConfig.issuer)
                     .build()
             )
             validate { credential ->
-                if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
+                if (credential.payload.audience.contains(jwtConfig.audience)) JWTPrincipal(credential.payload) else null
             }
         }
     }
