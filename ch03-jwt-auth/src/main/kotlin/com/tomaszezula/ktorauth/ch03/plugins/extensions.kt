@@ -1,5 +1,7 @@
 package com.tomaszezula.ktorauth.ch03.plugins
 
+import com.tomaszezula.ktorauth.ch03.model.JWTConfig
+import com.tomaszezula.ktorauth.ch03.model.User
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 
@@ -13,21 +15,15 @@ fun ApplicationConfig.jwtConfig(): JWTConfig {
     )
 }
 
-fun Application.loadUsers(filePath: String): Map<String, String> {
+fun Application.loadUsers(filePath: String): List<User> {
     val userFile = this.javaClass.classLoader.getResource(filePath)
         ?: throw IllegalArgumentException("Could not read users file: $filePath")
     val delimiter = "="
     userFile.readText().lines()
-    return userFile.readText().lines().filter { it.contains(delimiter) }.associate {
-        val (name, password) = it.split(delimiter)
-        name to password
+    return userFile.readText().lines().filter { it.contains(delimiter) }.map {
+        val (name, detail) = it.split(delimiter)
+        val (role, password) = detail.split(",")
+        User(name, role, password)
     }
 }
 
-data class JWTConfig(
-    val realm: String,
-    val secret: String,
-    val audience: String,
-    val issuer: String,
-    val expirationSeconds: Long
-)
