@@ -34,7 +34,7 @@ fun Application.configureRouting(jwtConfig: JWTConfig, userRepository: List<User
             call.respond(mapOf("token" to token))
         }
         authenticate("auth-jwt") {
-            get("/") {
+            get("/me") {
                 val principal = call.principal<JWTPrincipal>()
                 call.respondText("Hello ${principal?.name()}! Your token expires in ${principal?.ttl(clock)} ms.")
             }
