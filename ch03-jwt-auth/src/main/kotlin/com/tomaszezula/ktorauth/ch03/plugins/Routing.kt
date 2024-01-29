@@ -1,9 +1,9 @@
 package com.tomaszezula.ktorauth.ch03.plugins
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm.HMAC256
 import com.tomaszezula.ktorauth.ch03.model.JWTConfig
 import com.tomaszezula.ktorauth.ch03.model.User
+import com.tomaszezula.ktorauth.ch03.model.createToken
+import com.tomaszezula.ktorauth.ch03.model.verify
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -24,14 +24,40 @@ fun Application.configureRouting(jwtConfig: JWTConfig, userRepository: List<User
                 call.respond(HttpStatusCode.Forbidden, "Login failed")
                 return@post
             }
-            val token = JWT.create()
-                .withAudience(jwtConfig.audience)
-                .withIssuer(jwtConfig.issuer)
-                .withClaim("name", user.name)
-                .withClaim("role", user.role)
-                .withExpiresAt(clock.instant().plusSeconds(jwtConfig.expirationSeconds))
-                .sign(HMAC256(jwtConfig.secret))
-            call.respond(mapOf("token" to token))
+
+            fun createToken(expirationSeconds: Long): String =
+                jwtConfig.createToken(clock, user, expirationSeconds)
+
+            val accessToken = createToken(jwtConfig.expirationSeconds.accessToken)
+            val refreshToken = createToken(jwtConfig.expirationSeconds.refreshToken)
+            call.respond(
+                mapOf(
+                    "accessToken" to accessToken,
+                    "refreshToken" to refreshToken
+                )
+            )
+        }
+        post("/refresh") {
+            // Extract the refresh token from the request
+            val refreshToken = call.receive<RefreshToken>()
+
+            // Verify the refresh token and obtain the user
+            val user = jwtConfig.verify(refreshToken.token) ?: run {
+                call.respond(HttpStatusCode.Forbidden, "Invalid refresh token")
+                return@post
+            }
+
+            // Create new access and refresh tokens for the user
+            val newAccessToken = jwtConfig.createToken(clock, user, jwtConfig.expirationSeconds.accessToken)
+            val newRefreshToken = jwtConfig.createToken(clock, user, jwtConfig.expirationSeconds.refreshToken)
+
+            // Respond with the new tokens
+            call.respond(
+                mapOf(
+                    "accessToken" to newAccessToken,
+                    "refreshToken" to newRefreshToken
+                )
+            )
         }
         authenticate("auth-jwt") {
             get("/me") {
@@ -50,6 +76,10 @@ fun Application.configureRouting(jwtConfig: JWTConfig, userRepository: List<User
     }
 }
 
+
 @Serializable
 data class Login(val username: String, val password: String)
+
+@Serializable
+data class RefreshToken(val token: String)
 
