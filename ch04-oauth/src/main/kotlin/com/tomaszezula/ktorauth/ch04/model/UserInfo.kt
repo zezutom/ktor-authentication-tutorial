@@ -14,13 +14,3 @@ data class UserInfo(
     val picture: String,
     val locale: String
 )
-/**
- * {
- *   "id": "100267291539832074631",
- *   "name": "Tomas Zezula",
- *   "given_name": "Tomas",
- *   "family_name": "Zezula",
- *   "picture": "https://lh3.googleusercontent.com/a/ACg8ocKVRuMHgJ4Wvf91aaMTTx1wzDxyZJQ3eqyFl2RF_abDcY3l=s96-c",
- *   "locale": "en-GB"
- * }
- */
